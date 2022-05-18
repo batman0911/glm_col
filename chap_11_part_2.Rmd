@@ -1,0 +1,17 @@
+---
+title: "chap11_part_2"
+author: "linhnm"
+date: "5/18/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GLM chap 11
+
+```{r}
+
+```
+
