@@ -32,3 +32,41 @@ delta_df <- c(T_size*P_size, T_size*V_size, T_size*D_size, T_size*C_size, P_size
 1 - pchisq(delta_dev, delta_df)
 ```
 
+ex 11.8
+```{r}
+# 1. AIC cang nho thi mo hinh cang phu hop -> Gamma with log link function
+# 2. 
+```
+
+ex 11.9
+```{r}
+data("lime"); str(lime)
+
+lime.m1 <- glm( Foliage ~ Origin * log(DBH), family=Gamma(link="log"),data=lime)
+lime.m2 <- glm( Foliage ~ Origin * DBH,family=Gamma(link="log"), data=lime)
+par(mfrow=c(2, 3))
+
+scatter.smooth( log(fitted(lime.log)), rstandard(lime.log),col="gray", lwd=2 )
+qqnorm( qresid(lime.log)); plot(cooks.distance(lime.log), type="h")
+scatter.smooth( log(fitted(lime.m2)), rstandard(lime.m2),col="gray", lwd=2 )
+qqnorm( qresid(lime.m2)); plot(cooks.distance(lime.m2), type="h")
+
+
+# co the thay AIC cua lime.m1 < AIC cua lime.m2 -> lime.m1 tot hon 
+
+#colSums(influence.measures(lime.m1)$is.inf)
+#colSums(influence.measures(lime.m2)$is.inf)
+#summary(lime.m1)
+#summary(lime.m2)
+```
+ex 11.10
+```{r}
+lime.m1 <- glm( Foliage ~ Origin * log(DBH), family=Gamma(link="log"),data=lime)
+lime.age <- glm( Foliage ~ Origin * log(DBH) + Age, family=Gamma(link="log"),data=lime)
+
+summary(lime.age)
+# ta thay rang gia tri p-value cua bien giai thich age > 0.05 -> khong dong gop nhieu vao mo hinh
+```
+
+
+
