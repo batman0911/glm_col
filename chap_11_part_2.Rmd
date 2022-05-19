@@ -13,11 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ex 11.7
 ```{r}
-# 1, Thêm mỗi biến giải thích thì bậc tự do giảm đi 1 đơn vị
+# 1,
 # có 5 biến giải thích, ứng với số groups là 5, 5, 4, 5, 4 thì df = n - p' = 1975 - 5 - 5 - 4 - 5 - 4 - 1
 df0 = 1975 - 5 - 5 - 4 - 5 - 4 - 1
 df0
-#
+# 
 P_size <- 5; T_size <- 5; V_size <- 4; D_size <- 5; C_size <- 4
 delta_df_TP <- T_size * P_size
 df_TP <- df0 - delta_df_TP
