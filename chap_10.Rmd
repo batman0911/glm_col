@@ -207,11 +207,17 @@ summary(fit.nev)
 
 plot(cooks.distance(fit.poi), type="h")
 
+fit.infl <- update(fit.poi, subset = -1)
+plot(cooks.distance(fit.infl), type="h")
+
 anova(fit.nev, test = "Chisq")
 
 p.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FALSE)
 p.poi <- pchisq(deviance(fit.poi), df.residual(fit.poi), lower.tail = FALSE)
-c(p.poi, p.nev)
+p.infl <- pchisq(deviance(fit.infl), df.residual(fit.infl), lower.tail = FALSE)
+c(p.poi, p.nev, p.infl)
+
+extractAIC(fit.poi)
 
 ```
 
