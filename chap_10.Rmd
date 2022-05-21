@@ -264,7 +264,7 @@ anova(model1, test = "F")
 
 ### Problem 17
 
-An experiment \[23, 36\] recorded the time to failure of a piece of
+An experiment [23, 36] recorded the time to failure of a piece of
 electronic equipment while operating in two diﬀerent modes. In any
 session, the machine is run in both modes for varying amounts of time
 (Table 10.20; dataset: failures). For each operating period, Mode 1 is
@@ -321,25 +321,36 @@ fitted.identity <- lm(Failures ~ Time1 + log(Time2), data=failures)
 printCoefmat( coef( summary(fitted.identity)))
 ```
 
-Giá trị kiểm định các hệ số cho thấy một mô hình hồi quy tuyến tính là
-tương đối phù hợp
+Giá trị kiểm định các hệ số cho thấy một mô hình hien tai chua phù hợp
 
 **3.**
-
 ```{r}
-fitted.poisson <- glm(Failures ~ Time1 + log(Time2), data=failures, family=poisson(link="log"))
+fitted.poisson <- glm(Failures ~ Time1 + log(Time2) + 0, data=failures, family=poisson(link="identity"))
 printCoefmat( coef( summary(fitted.poisson)))
 ```
-
+```{r}
+fitted.poisson <- glm(Failures ~ Time1 + log(Time2) + 0, data=failures, family=poisson(link="log"))
+printCoefmat( coef( summary(fitted.poisson)))
+```
+```{r}
+summary(fitted.poisson)
+```
+```{r}
+q.poisson <- glm(Failures ~ Time1 + log(Time2) + 0, data=failures, family=quasipoisson(link="log"))
+printCoefmat( coef( summary(fitted.poisson)))
+```
 Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1
 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời
 gian hoạt động ở chế độ 2 là không đáng kể.
+```{r}
+summary(q.poisson)
+```
 
 **4.**
 
 ```{r}
-deviance(fitted.poisson)
-df.residual(fitted.poisson)
+deviance(q.poisson)
+df.residual(q.poisson)
 ```
 
 Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô
@@ -359,12 +370,18 @@ printCoefmat( coef( summary(m.qp)))
 *Goodness of fit test*
 
 ```{r}
-fit <- m.qp
+fit <- fitted.poisson
 pearson.gof <- sum(fit$weights * fit$residuals^2)
 tab <- data.frame(GoF.Statistic=c(fit$deviance, pearson.gof))
 tab$DF <- rep(fit$df.residual, 2)
 tab$P.Value <- pchisq(tab$GoF, df=tab$DF, lower.tail=FALSE)
 row.names(tab) <- c("Deviance", "Pearson"); print(tab, digits=3)
+```
+```{r}
+confint(q.poisson)
+```
+```{r}
+confint(fitted.pois)
 ```
 
 => Giá trị của kiểm định goodness of fit cho thấy mô hình chưa có đủ các
@@ -375,8 +392,6 @@ biến cần thiết để biểu diễn tính hệ thống của biến đầu 
 ```{r}
 plot( resid(m.qp) ~ sqrt(fitted(m.qp)), las=1, main="Deviance residuals", ylab="Deviance residuals",xlab="Square root of fitted values" )
 ```
-
-Kiểm tra sự phù hợp của việc lựa chọn Poisson GLM
 
 => Biểu đồ thể hiện một random pattern của phần dư chứng tỏ rằng mô hình
 là tương đối phù hợp
@@ -390,7 +405,7 @@ plot( cooks.distance(m.qp), type="h", las=1,ylab="Cook's distance, D", main="Coo
 Kiểm tra Possion EDM có phù hợp với biến đầu ra không
 
 ```{r}
-qqnorm( resid(m.qp), las=1,main="Normal Q-Q plot\ndeviance residuals")
+qqnorm( resid(m.qp), las=1,main="Normal Q-Q plot deviance residuals")
 qqline( resid(m.qp))
 ```
 

@@ -1,0 +1,121 @@
+#bai 8.4
+y<-rpois(1000,1)
+m1<-glm(y~1,family=poisson)
+summary(m1)
+
+par(mfrow=c(1,3))
+#pearson residual
+qqnorm(resid(m1),type="pearson")
+qqline(resid(m1), type="pearson")
+#deviance residual
+qqnorm(resid(m1))
+qqline(resid(m1))
+#quantile residual
+library(statmod)
+qqnorm(qresid(m1))
+qqline(qresid(m1))
+#KL: chi co quantile residual phan anh dung
+
+
+#bai 8.6
+#a
+data(trees)
+cherry.m1 <- glm(Volume~log(Girth)+log(Height),
+                 family=Gamma(link=log),data=trees)
+rD<-resid(cherry.m1)
+phiP<-summary(cherry.m1)$dispersion
+standard_rD<-rstandard(cherry.m1)
+#b
+cherry.omit1 <- glm(Volume~log(Girth)+log(Height),
+                    family=Gamma(link=log),data=trees,subset=(-1))
+rD2<-resid(cherry.omit1)
+a1<-(rD-rD2)/phiP
+a2<-standard_rD^2
+a1-a2
+
+#bai 8.7
+#a
+library(GLMsData)
+data("seabirds")
+sbird<-glm(Count~Species+factor(Quadrat),
+           family = poisson(link=log), data=seabirds)
+#b
+min<-min(seabirds$Count)
+min #0
+#=> cac dieu kien CLT va xap xi yen ngua khong thoa man
+#=> rP, rD khong phu hop
+#c
+par(mfrow=c(2,2))
+plot(resid(sbird) ~ fitted(sbird))
+plot(resid(sbird) ~ sqrt(fitted(sbird)))
+#=> mo hinh chua phu hop, residual phan tan khong deu, khong doi xung qua 0
+#d
+library(statmod)
+plot(qresid(sbird) ~ fitted(sbird))
+plot(qresid(sbird) ~ sqrt(fitted(sbird)))
+#=> mo hinh chua phu hop, residual phan tan khong deu, khong doi xung qua 0
+#rQ cho thay ro xu huong phan tan hon
+
+#bai 8.11
+library(GLMsData)
+data("blocks")
+blok <- glm(Number ~ Age, data=blocks,
+            family=poisson)
+par(mfrow=c(2,2))
+#plot(qresid(blok) ~ blocks$Age)
+plot(qresid(blok) ~ sqrt(fitted(blok)))
+plot(cooks.distance(blok), type="h")
+qqnorm(rstandard(blok))
+qqline(rstandard(blok))
+qqnorm(qresid(blok))
+qqline(qresid(blok))
+colSums(influence.measures(blok)$is.inf)
+#Mo hinh phu hop
+
+#bai 8.12
+library(GLMsData)
+data(nambeware)
+plot(Price~Diam, data=nambeware)
+nware <- glm(Price~log(Diam), data=nambeware,
+             family = Gamma(link=log), subset=(-11)) 
+summary(nware)
+plot(rstandard(nware)~log(fitted(nware)))
+plot(cooks.distance(nware), type="h")
+colSums(influence.measures(nware)$is.inf)
+qqnorm(rstandard(nware))
+qqline(rstandard(nware))
+library(statmod)
+qqnorm(qresid(nware))
+qqline(qresid(nware))
+plot(rstandard(nware)~log(nambeware$Diam))
+plot(hatvalues(nware), type="h")
+#=> mo hinh phu hop
+
+#bai 8.13
+library(GLMsData)
+data("triangle")
+#a
+#mu^2=x1^2 + x2^2 => link function la power(lambda=2)
+#=> dung family=quasi de dung link funct power
+#b
+#normal distribution
+m1 <- glm(y~I(x1^2)+I(x2^2), data=triangle,
+          family=quasi(link=power(lambda=2), variance = "constant"))
+m2 <- glm(y~I(x1^2)+I(x2^2), data=triangle,
+          family=quasi(link=power(lambda=2), variance = "mu^2"))
+par(mfrow=c(1,2))
+plot(rstandard(m1)~fitted(m1))
+plot(rstandard(m2)~log(fitted(m2)))
+#=> nhu nhau
+#=> tuong duong nhau
+library(statmod)
+qqnorm(qresid(m1)); qqline(qresid(m1))
+qqnorm(qresid(m2)); qqline(qresid(m2))
+#=> tuong duong nhau
+par(mfrow=c(1,2))
+plot(cooks.distance(m1),type="h")
+plot(cooks.distance(m2),type="h")
+#=> tuong duong nhau, m1 tot hon 1 chut
+colSums(influence.measures(m1)$is.inf)
+colSums(influence.measures(m2)$is.inf)
+#=> tuong duong nhau, m1 tot hon 1 chut
