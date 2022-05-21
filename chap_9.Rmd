@@ -1,0 +1,280 @@
+---
+title: "chap_8"
+author: "linhnm"
+date: '2022-05-17'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#bai 9.5
+```{r}
+#a
+#log(mu/(1-mu)) = -6.949 + 0.805*x1 + 0.161*x2 + 0.332*x3 + 0.116*x4
+#b
+beta <- c(-6.949, 0.805, 0.161, 0.332, 0.116)
+se.beta <- c(0.377, 0.0444, 0.113, 0.0393, 0.0204)
+z <- beta/se.beta
+z
+p.val <- 2* pnorm(abs(z),lower.tail = FALSE)
+p.val
+#beta0, beta1 quan trong nhat
+#c
+beta.l <- beta - qnorm(0.975)* se.beta
+beta.h <- beta + qnorm(0.975)* se.beta
+beta.l
+beta.h
+#d
+or <- exp(beta)
+or
+#e
+#thay so
+```
+#bai 9.6
+```{r}
+#a
+#ym = 0.45 + 0.04*x1 + 0.25*x2 + 0.23*x3
+#yf = -0.22 + 0.26*x1 + 0.82*x2 - 0.22*x3
+#b
+beta.interaction <- c(0.23,-0.22)
+se.beta.interaction <- c(0.17, 0.11)
+z <- beta.interaction/se.beta.interaction
+z #1.352941 -2.000000
+#c
+#z=sign(beta)sqrt(L)
+#phi=1 => L=D => z=sign(beta)sqrt(D)
+D<-c(53.4, 117.82)
+z<-sqrt(D)
+p.val <- 2*pnorm(z,lower.tail = FALSE)
+p.val
+#=> bien interaction co can thiet cho mo hinh
+#d
+z<-qnorm(0.975)
+ci.m <- c(0.23-z*0.17, 0.23 +z*0.17)
+ci.f <- c(-0.22 -z*0.11, -0.22+z*0.11)
+ci.m
+ci.f
+#e
+beta.aa<-c(0.25, 0.82)
+OR.aa <- exp(beta.aa)
+OR.aa
+#y nghia: odd cua aa=1 gap OR.aa lan odd cua aa=0
+#f
+#rD: Residual deviance >> df.residual=p' => lack of fit
+#nghi ngo overdispersion
+#e
+z.AA <- c(0.25, 0.82)/c(0.15, 0.19)
+p.val.AA <- 2*pnorm(z.AA,lower.tail = FALSE)
+p.val.AA #9.558070e-02,  1.590335e-05
+z.RS <- c(0.04, 0.26)/c(0.08, 0.06)
+p.val.RS <- 2*pnorm(z.RS, lower.tail = FALSE)
+p.val.RS #6.170751e-01,  1.468685e-05
+#=> ca 3 bien G, RS, AA deu co tham so <> 0
+```
+#bai 9.7
+```{r}
+library(GLMsData)
+data("shuttles")
+#a
+plot(Damaged~Temp, data=shuttles)
+#b
+shuttles$DamagedProp <- shuttles$Damaged/6
+m<-glm(DamagedProp~Temp, data=shuttles, weights = rep(6,length(Temp)),
+       family=binomial)
+summary(m)
+#c
+library(statmod)
+plot(qresid(m)~fitted(m))
+plot(cooks.distance(m), type = "h")
+qqnorm(qresid(m)); qqline(qresid(m))
+colSums(influence.measures(m)$is.inf)
+#d
+p<-predict(m,newdata = data.frame(Temp=31), type="response")
+p #0.8177744 
+#e
+library(MASS)
+ed <- dose.p(m)
+ed #43.98725
+#tai nhiet do 43.99F, 50% Oring break.
+```
+
+#bai 9.8
+```{r}
+library(GLMsData)
+data("serum")
+m.serum <- glm(Survivors/Number~1+log(Dose), weights = Number, data=serum,
+               family=binomial)
+summary(m.serum)
+#b
+plot(qresid(m.serum)~fitted(m.serum))
+qqnorm(qresid(m.serum))
+qqline(qresid(mserum))
+plot(cooks.distance(m.serum), type="h")
+colSums(influence.measures(m.serum)$is.inf)
+#c
+plot(Survivors/Number~log(Dose), data=serum)
+#d
+library(MASS)
+d<-exp(dose.p(m.serum))
+d #0.001396418
+#e
+```
+#bai 9.9
+```{r}
+library(GLMsData)
+data("budworm")
+par(mfrow=c(1,1))
+plot(Killed/Number~log(Dose), data=budworm, 
+     pch=ifelse(Gender=="F",1,19))
+#b
+m.worm1 <- glm(Killed/Number~1+log2(Dose)*Gender,weights = Number,
+               data=budworm, family=binomial)
+summary(m.worm1)
+anova(m.worm1,test="Chisq")
+m.worm2 <- glm(Killed/Number~Gender+log2(Dose)-1,weights = Number,
+               data=budworm, family=binomial)
+summary(m.worm2)
+#c
+newD <- seq(min(budworm$Dose), max(budworm$Dose), length=100)
+newP.F <- predict(m.worm2, newdata=data.frame(Dose=newD, Gender="F"),
+                  type="response")
+newP.M <- predict(m.worm2, newdata = data.frame(Dose=newD, Gender="M"),
+                  type="response")
+lines(newP.F~log2(newD), lty=1)
+lines(newP.M~log2(newD), lty=2)
+legend("topleft", lty=1:2, legend=c("Females", "Males"))
+#d
+exp(coef(m.worm2))
+#odd cua Male =3 lan odd cua Female
+#e: 
+summary(m.worm2)
+#p.val =0.00198<5%
+#f
+ed.F<-dose.p(m.worm2,c(1,3))
+ed.M<-dose.p(m.worm2,c(2,3))
+exp(c(ed.F,ed.M))
+#e
+confint(m.worm2,level=.9)
+```
+
+#bai 9.10
+```{r}
+library(GLMsData)
+data("belection")
+belection$F.prop <- belection$Females/(belection$Females+belection$Males)
+belection$Total <- belection$Females+belection$Males
+par(mfrow=c(1,2))
+#a
+plot(F.prop~Party, data=belection)
+#b
+plot(F.prop~Region, data=belection)
+#c
+m <- glm(F.prop~Party+Region, data=belection,
+         family=binomial, weights=Total)
+summary(m)
+#d
+anova(m,test="Chisq")
+#Resid. Dev >> Resid.Df => dau hieu overdispersion
+#6
+odd.cons <- exp(coef(m)[1])
+odd.cons
+odd.lab <-exp(coef(m)[1])*exp(coef(m)[3])
+odd.lab
+or <- odd.cons/odd.lab
+or
+#7
+min(belection$Females) #0<3
+min(belection$Males) #6>=3
+#=> khong thoa man saddle point approximation
+```
+
+#bai 9.11
+```{r}
+y <- c(3,2,4,1,5,3,5,6)
+m <- c(3,2,4,1,5,5,9,17)
+gender<-factor(c(0,0,1,1,0,0,1,1),labels = c("Female","Male"))
+li <-factor(c(0,0,0,0,1,1,1,1),labels=c("Absent","Present"))
+gender
+li
+#a
+par(mfrow=c(1,3))
+plot(y/m~gender)
+plot(y/m~li)
+interaction.plot(li,gender,y/m)
+#b
+#m1<-glm(y/m~gender, family=binomial, weights = m)
+m2<-glm(y/m~gender+li, family=binomial, weights=m)
+m3<-glm(y/m~li+gender, family=binomial, weights=m)
+summary(m2)
+#c
+anova(m3, test="Chisq")
+#d
+s<-glm.scoretest(m3,as.numeric(li))
+s
+p<-2*(1-pnorm(s,lower.tail = FALSE))
+p #0.4802387
+#e
+#y/m~~1 -> Wald test ko chinh xac
+```
+#bai 9.12
+```{r}
+Subs <- factor(c(rep(0,4), rep(1,5)), labels = c("A","B"))
+Dose <- c(0,20,100,200,0,62.5,125,250,500)
+N.Ce <- c(400,200,200,200,400,200,200,200,200)
+N.Ab <- c(3,5,14,4,5,2,2,4,7)
+m <- glm(N.Ab/N.Ce ~ Subs+Dose,weights=N.Ce,
+         family=binomial(link=cloglog))
+summary(m)
+#b
+m2 <- glm(N.Ab/N.Ce ~ Subs+log(Dose+0.5),weights=N.Ce,
+          family=binomial(link=cloglog))
+summary(m2)
+cbind(coef(m),coef(m2))
+par(mfrow=c(1,2))
+plot(rstandard(m)~fitted(m))
+plot(rstandard(m2)~fitted(m2))
+par(mfrow=c(1,2))
+qqnorm(rstandard(m)); qqline(rstandard(m))
+qqnorm(rstandard(m2)); qqline(rstandard(m2)) #=>m2 tot hon
+par(mfrow=c(1,2))
+plot(cooks.distance(m),type="h")
+plot(cooks.distance(m2),type="h")
+colSums(influence.measures(m)$is.inf)
+colSums(influence.measures(m2)$is.inf) #=> m1 tot hon
+#c
+confint(m,level=0.95)
+#d: ED50 khong thuc te voi truong hop nay vi ty le te bao dot bien <<50%
+```
+#bai 9.13
+```{r}
+library(GLMsData)
+data(nminer)
+nminer$Grazed <- as.factor(nminer$Grazed)
+nminer$Shrubs <- as.factor(nminer$Shrubs)
+m<-glm(Miners~Eucs, 
+       data=nminer,
+       family=binomial)
+summary(m) 
+anova(m, test="Chisq")
+par(mfrow=c(1,1))
+plot(qresid(m)~fitted(m))
+qqnorm(qresid(m))
+qqline(qresid(m))
+plot(cooks.distance(m), type="h")
+colSums(influence.measures(m)$is.inf)
+#b
+d<-dose.p(m,p=0.9)
+d #16.11663 => 17 Eucs
+```
+#bai 9.14
+```{r}
+library(GLMsData)
+data("germBin")
+m2<-glm(Result~Extract+Seeds, data=germBin,
+        family=binomial)
+summary(m2)
+anova(m2, test="Chisq")
+plot(qresid(m2)~fitted(m2))
+plot(cooks.distance(m2),type="h")
+qqnorm(qresi)
+```
