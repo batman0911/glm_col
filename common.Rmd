@@ -3,8 +3,8 @@ title: "common"
 author: "linhnm"
 date: '2022-05-17'
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -40,7 +40,7 @@ failures
 plot(Failures ~ Time1, data=failures, xlab="Time spent in Mode 1", ylab="Number of failures")
 ```
 
-Từ biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
+Tu biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
 
 ```{r}
 par(mfrow=c(1,2))
@@ -68,7 +68,7 @@ fitted.poisson <- glm(Failures ~ Time1 + log(Time2), data=failures, family=poiss
 printCoefmat( coef( summary(fitted.poisson)))
 ```
 
-Từ bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời gian hoạt động ở chế độ 2 là không đáng kể.
+Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời gian hoạt động ở chế độ 2 là không đáng kể.
 
 **4.**
 
@@ -77,7 +77,7 @@ deviance(fitted.poisson)
 df.residual(fitted.poisson)
 ```
 
-Từ dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô hình có hiện tượng underdispersion
+Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô hình có hiện tượng underdispersion
 
 **5.**
 
@@ -123,7 +123,7 @@ qqnorm( resid(m.qp), las=1,main="Normal Q-Q plot\ndeviance residuals")
 qqline( resid(m.qp))
 ```
 
-=> Từ biểu đồ có thể thấy rằng các phân vị của mẫu bám sát đường phân vị lý thuyết nên mô hình Poisson là phù hợp
+=> Tu biểu đồ có thể thấy rằng các phân vị của mẫu bám sát đường phân vị lý thuyết nên mô hình Poisson là phù hợp
 
 *Công thức của Mô hình:*
 
@@ -173,7 +173,7 @@ with(ccancer,{
 })
 
 ```
-Từ dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá trị 0 này sẽ là sampling zero.
+Tu dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá trị 0 này sẽ là sampling zero.
 
 ```{r}
 plot(Count/Population*1000~Site, data=ccancer, xlab="Site", ylab="Cancer rate per thousand people", las=1, main="Cancer rate against Cancer Site")

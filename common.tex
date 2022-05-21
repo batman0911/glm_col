@@ -172,7 +172,7 @@ spent in each mode is measured in weeks (Problem 10.17)
 
 \includegraphics{common_files/figure-latex/unnamed-chunk-2-1.pdf}
 
-Từ biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian
+Tu biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian
 hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
 
 \begin{Shaded}
@@ -230,7 +230,7 @@ tương đối phù hợp
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 \end{verbatim}
 
-Từ bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1
+Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1
 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời
 gian hoạt động ở chế độ 2 là không đáng kể.
 
@@ -256,7 +256,7 @@ gian hoạt động ở chế độ 2 là không đáng kể.
 ## [1] 6
 \end{verbatim}
 
-Từ dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô
+Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô
 hình có hiện tượng underdispersion
 
 \textbf{5.}
@@ -299,6 +299,10 @@ kê nên ta cũng loại khỏi mô hình
 ## Pearson           4.63  7   0.704
 \end{verbatim}
 
+=\textgreater{} Giá trị của kiểm định goodness of fit cho thấy mô hình
+chưa có đủ các biến cần thiết để biểu diễn tính hệ thống của biến đầu ra
+.
+
 \emph{Tiến hành chuẩn đoán mô hình:} Kiểm tra phần dư GLM
 
 \begin{Shaded}
@@ -335,7 +339,7 @@ Kiểm tra Possion EDM có phù hợp với biến đầu ra không
 
 \includegraphics{common_files/figure-latex/unnamed-chunk-11-1.pdf}
 
-=\textgreater{} Từ biểu đồ có thể thấy rằng các phân vị của mẫu bám sát
+=\textgreater{} Tu biểu đồ có thể thấy rằng các phân vị của mẫu bám sát
 đường phân vị lý thuyết nên mô hình Poisson là phù hợp
 
 \emph{Công thức của Mô hình:}
@@ -436,7 +440,30 @@ cũng lớn hơn.
 
 \textbf{2.}
 
-(Chưa làm được)
+Để xem xét giá trị 0 ở một số loại ung thư là mang tính chất hệ thống
+hay ngẫu nhiên . Ta thử xem sự phân bố của chúng theo giới tính :
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{with}\NormalTok{(ccancer,\{}
+\NormalTok{  Count.by.Site.Gender }\OtherTok{\textless{}{-}} \FunctionTok{xtabs}\NormalTok{(Count }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Gender }\SpecialCharTok{+}\NormalTok{ Site)}
+\NormalTok{  Count.by.Site.Gender}
+\NormalTok{\})}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       Site
+## Gender Breast Colorectal Lung Pancreas Prostate
+##      F   3645       2100 4495     1025        0
+##      M      0       2410 7240      950     2580
+\end{verbatim}
+
+Tu dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy
+ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị
+zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể
+xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá
+trị 0 này sẽ là sampling zero.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -444,7 +471,7 @@ cũng lớn hơn.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{common_files/figure-latex/unnamed-chunk-14-1.pdf}
+\includegraphics{common_files/figure-latex/unnamed-chunk-15-1.pdf}
 \textbf{3.}
 
 Ta xét với Biến đầu ra là số lượng ca ung thư trên 1000 người, một mô
