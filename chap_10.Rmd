@@ -5,6 +5,9 @@ date: '2022-05-17'
 output:
   pdf_document: default
   html_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -15,20 +18,276 @@ library(GLMsData)
 
 ## Chapter 10
 
+### Problem 9
+
+```{r}
+install.packages("GLMsData") 
+library(GLMsData) 
+data(danishlc) 
+danishlc
+```
+
+Mo hinh binomial
+
+```{r}
+model1 <- glm(Cases/Pop~Age*City,family=binomial,weights=Pop,data=danishlc)
+anova(model1,test="Chisq") 
+```
+
+=> Tu kiem dinh anova, ta thay co bien age co y nghia. Vi vay, ta chi
+giu lai bien age trong mo hinh
+
+```{r}
+model2 <- glm(Cases/Pop~Age,family=binomial,weights=Pop,data=danishlc)
+anova(model2,test="Chisq")
+```
+
+Nhanxet: Chi co bien age co y nghia #Mo hinh Poisson cho ty le
+
+```{r}
+model3=glm(Cases~offset(log(Pop))+City*Age,family=poisson,data=danishlc)
+anova(model3,test="Chisq")
+```
+
+Tu anova, ta thay chi co bien age co y nghia. Vi vay ta chi giu lai bien
+age
+
+```{r}
+model4=glm(Cases~offset(log(Pop))+Age,family=poisson,data=danishlc)
+```
+
+Bien off-set lun giu lai
+
+```{r}
+anova(model4,test="Chisq")
+```
+
+Note: Vay 2 mo hinh Poisson va binomial deu ra ket qua bien age co y
+nghia #So sanh 2 mo binh bang AIC (hoac BIC)
+
+```{r}
+AIC(model4) 
+AIC(model2)
+```
+
+=> Vi AIC mo hinh 2 thap hon nen mo hinh 2 tot hon 1 chut
+
+```{r}
+danishlc$Cases / danishlc$Pop 
+```
+
+Vi ty le cua cases/pop hầu hết dưới 1% nên thoả mãn giả thiết để
+binomial va poisson gan tuong duong nhau
+
+### Problem 10
+
+```{r}
+data(nminer) nminer
+model1=glm(Minerab~Eucs+Area+Grazed+Shrubs+Bulokes,family=poisson,data=nminer)
+anova(model1,test="Chisq")
+```
+
+theo ket qua kd anova, bien giai thich Eucs va Area co y nghia trong
+viec giai thich so chim minerab (co anh huong den so con chim miner)
+
+xay dung mo hinh voi 2 bien
+
+```{r}
+model2=glm(Minerab~Eucs+Area,family=poisson,data=nminer)
+anova(model2,test="Chisq")
+```
+
+2.  
+
+So sanh 2 model voi nhau( vi model 2 la nested model cua model 1), dung
+anova:
+
+```{r}
+anova(model2,model1,test="Chisq")
+```
+
+dua model nested vao trc
+
+Vi pvalue lon nen mo hinh nhieu bien ko tot hon => sd mo hinh it bien
+
+including a diagnostic analysis (Phan tich chuan doan):
+
+Can bieu do phan du, cook distance, QQ plot
+
+Bieu do 1: Residual plot:
+
+```{r}
+plot( resid(model2) ~
+sqrt(fitted(model2)), las=1, main="Deviance residuals", ylab="Deviance
+residuals", xlab="Square root of fitted values" ) 
+```
+
+ko co pattern ro rang Bieu do 2: Cook's distance
+
+```{r}
+plot( cooks.distance(model2), type="h",
+las=1, ylab="Cook's distance, D", main="Cook's distance") 
+```
+
+Ko co quan sat nao co anh huong lon den ket qua cua mo hinh (influential
+observation)
+
+Bieu do 3: Q-Q plot
+
+```{r}
+qqnorm( resid(model2), las=1,
+main="Normal Q-Q plot ndeviance residuals") qqline( resid(model2))
+```
+
+phan du gan phan phoi chuan #b. Doi voi pp Poisson, Diem xap xi yen ngua
+chinh xac khi ma bien dem \>=3 doi voi tung quan sat (page 372)
+
+```{r}
+nminer$Minerab
+```
+
+Vi nhieu quan sat \<3 nen diem xap xi yen ngua trong truong hop nay ko
+chinh xac
+
+### Problem 11
+
+```{r}
+data(cervical) 
+cervical 
+cervical$Rate <- cervical$Deaths / cervical$Wyears * 1000 
+```
+
+Rate per 1000
+
+Ensure age-order is preserved
+
+```{r}
+cervical$Age <- ordered(cervical$Age, levels=c("25to34", "35to44", "45to54", "55to64") ) 
+cervical$Country <- abbreviate(cervical$Country, 1) 
+```
+
+Abbreviate city names
+
+```{r}
+matplot( xtabs( Deaths*1000/Wyears ~ Age+Country, data=cervical), pch=1:4, lty=1:4,type="b", lwd=2, col="black", axes=FALSE, ylim=c(0, 25), xlab="Age group", ylab="Cases/1000") 
+```
+
+Wyears co the hieu la dan so
+
+```{r}
+axis(side=1, at=1:4, labels=levels(cervical$Age)) 
+axis(side=2, las=1); 
+box() 
+legend("topleft", col="black", pch=1:4, lwd=2, lty=1:4, merge=FALSE, legend=c("EngWales", "Belgium", "France", "Italy") )
+```
+
+So luong ng chet boi ung thu cang lon khi tuoi cang cao
+
+Khi dung poisson de mo hinh hoa ty le, thi mo hinh co dang:
+logu=logT+bo+bjxj
+
+do he so cua logT=1 nen ta dung offset
+
+```{r}
+model1=glm(Deaths~offset(log(Wyears))+Age*Country,family=poisson,data=cervical)
+anova(model1, test = "Chisq")
+```
+
+Ca 3 bien deu co y nghia thong ke khi giai thich cho so ng chet vi ung
+thu
+
+Bieu do 1: Residual plot cua mh Poisson:
+
+```{r}
+plot( resid(model1) ~ sqrt(fitted(model1)), las=1, main="Deviance residuals", ylab="Deviance residuals", xlab="Square root of fitted values" )
+plot( rstandard(model1)~ fitted(model1), main="Poisson glm" ) 
+```
+
+Co pattern
+
+Dung quasi-poisson cho mo hinh tren
+
+```{r}
+model2=glm(Deaths~offset(log(Wyears))+Age+Country,family=quasipoisson,data=cervical)
+```
+
+chu y: trong quassi ko them bien tuong tac
+
+```{r}
+anova(model2, test = "F")
+```
+
+vay vien age va country co y nghia tke giai thich cho so ng chet vi ung
+thu #Bieu do 2: Residual plot cua mh Poisson:
+
+```{r}
+plot( resid(model2) ~ sqrt(fitted(model2)), las=1, main="Deviance residuals", ylab="Deviance residuals", xlab="Square root of fitted values" )
+```
+
+=> ko co pattern ro ret
+
+Dung negative binominal cho mo hinh tren
+
+```{r}
+install.packages("MASS")
+library(MASS) 
+model3.nb <- glm.nb(Deaths ~offset(log(Wyears))+Age+Country, data=cervical ) 
+model3.nb <-glm.convert(model3.nb) 
+printCoefmat(coef(summary(model3.nb, dispersion=1))) 
+anova(model3.nb,test="F") 
+```
+
+Bieu do 3: Residual plot cua mh NB:
+
+```{r}
+plot( resid(model3.nb) ~ sqrt(fitted(model3.nb)), las=1, main="Deviance residuals", ylab="Deviance residuals", xlab="Square root of fitted values" ) 
+```
+
+ko co pattern ro ret
+
+So sanh 3 mo hinh: Poisson, Quasi Poisson, NB AIC(model1) #154
+
+```{r}
+AIC(model2) 
+AIC(model3.nb) 
+```
+
+216 #AIC cua model1 nho hon, mo hinh Poisson tot hon NB
+
+### Problem 12
+
+```{r}
+data(dwomen) dwomen
+model1=glm(Counts\~Depression+SLE+Children,family=poisson,data=dwomen)
+anova(model1, test = "F")
+```
+
 ### Problem 17
 
-An experiment [23, 36] recorded the time to failure of a piece of electronic equipment while operating in two diﬀerent modes. In any session, the machine is run in both modes for varying amounts of time (Table 10.20; dataset: failures). For each operating period, Mode 1 is the time spent operating in one mode and Mode 2 is the time spent operating in the other mode. The number of failures in each period is recorded, where each operating period is measured in weeks. The interest is in ﬁnding a model for the number of failures given the amount of time the equipment spends in the two modes.
+An experiment \[23, 36\] recorded the time to failure of a piece of
+electronic equipment while operating in two diﬀerent modes. In any
+session, the machine is run in both modes for varying amounts of time
+(Table 10.20; dataset: failures). For each operating period, Mode 1 is
+the time spent operating in one mode and Mode 2 is the time spent
+operating in the other mode. The number of failures in each period is
+recorded, where each operating period is measured in weeks. The interest
+is in ﬁnding a model for the number of failures given the amount of time
+the equipment spends in the two modes.
 
-Table 10.20 Observations on electronic equipment failures. The time spent in each mode is measured in weeks (Problem 10.17)
+Table 10.20 Observations on electronic equipment failures. The time
+spent in each mode is measured in weeks (Problem 10.17)
 
 ```{r echo=FALSE}
 data(failures)
 failures
 ```
 
-1.  Plot the number of failures against the time spent in Mode 1, and then against the time spent in Mode 2.
+1.  Plot the number of failures against the time spent in Mode 1, and
+    then against the time spent in Mode 2.
 2.  Show that an identity link function may be appropriate.
-3.  Fit the Poisson model, to model the number of failures as a function of the time spent in the two modes. Which mode appears to be the major source of failures?
+3.  Fit the Poisson model, to model the number of failures as a function
+    of the time spent in the two modes. Which mode appears to be the
+    major source of failures?
 4.  Is there evidence of under- or overdispersion?
 5.  Interpret the ﬁnal model.
 
@@ -40,7 +299,8 @@ failures
 plot(Failures ~ Time1, data=failures, xlab="Time spent in Mode 1", ylab="Number of failures")
 ```
 
-Tu biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
+Tu biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian
+hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
 
 ```{r}
 par(mfrow=c(1,2))
@@ -48,18 +308,21 @@ plot(Failures ~ Time2, data=failures,xlab="Time spent in Mode 2",ylab="Number of
 plot(log(Failures) ~ log(Time2), data=failures,xlab="log(Time spent in Mode 2)",ylab="Number of failures")
 ```
 
-Biểu đồ chỉ ra xu hướng tương đối tuyến tính giữa số lần trục trặc và log của thời gian hoạt động ở chế độ 2.
+Biểu đồ chỉ ra xu hướng tương đối tuyến tính giữa số lần trục trặc và
+log của thời gian hoạt động ở chế độ 2.
 
 **2.**
 
-Ta thử thử fit một mô hình hồi quy tuyến tính (link function là identity)
+Ta thử thử fit một mô hình hồi quy tuyến tính (link function là
+identity)
 
 ```{r}
 fitted.identity <- lm(Failures ~ Time1 + log(Time2), data=failures)
 printCoefmat( coef( summary(fitted.identity)))
 ```
 
-Giá trị kiểm định các hệ số cho thấy một mô hình hồi quy tuyến tính là tương đối phù hợp
+Giá trị kiểm định các hệ số cho thấy một mô hình hồi quy tuyến tính là
+tương đối phù hợp
 
 **3.**
 
@@ -68,7 +331,9 @@ fitted.poisson <- glm(Failures ~ Time1 + log(Time2), data=failures, family=poiss
 printCoefmat( coef( summary(fitted.poisson)))
 ```
 
-Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời gian hoạt động ở chế độ 2 là không đáng kể.
+Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1
+là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời
+gian hoạt động ở chế độ 2 là không đáng kể.
 
 **4.**
 
@@ -77,18 +342,22 @@ deviance(fitted.poisson)
 df.residual(fitted.poisson)
 ```
 
-Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô hình có hiện tượng underdispersion
+Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô
+hình có hiện tượng underdispersion
 
 **5.**
 
-Mô hình Poisson GLM có hiện tương underdispersion, vậy nên ta tìm kiếm một mô hình thay thế là quasi-Poisson. Vì Mode 2 không có ý nghĩa thống kê nên ta cũng loại khỏi mô hình
+Mô hình Poisson GLM có hiện tương underdispersion, vậy nên ta tìm kiếm
+một mô hình thay thế là quasi-Poisson. Vì Mode 2 không có ý nghĩa thống
+kê nên ta cũng loại khỏi mô hình
 
 ```{r}
 m.qp <- glm(Failures ~ Time1, data=failures, family=quasipoisson)
 printCoefmat( coef( summary(m.qp)))
 ```
 
-*Goodness of fit test *
+*Goodness of fit test*
+
 ```{r}
 fit <- m.qp
 pearson.gof <- sum(fit$weights * fit$residuals^2)
@@ -97,8 +366,9 @@ tab$DF <- rep(fit$df.residual, 2)
 tab$P.Value <- pchisq(tab$GoF, df=tab$DF, lower.tail=FALSE)
 row.names(tab) <- c("Deviance", "Pearson"); print(tab, digits=3)
 ```
-=> Giá trị của kiểm định goodness of fit cho thấy mô hình chưa  có đủ các biến cần thiết để biểu diễn tính hệ thống của biến đầu ra . 
 
+=> Giá trị của kiểm định goodness of fit cho thấy mô hình chưa có đủ các
+biến cần thiết để biểu diễn tính hệ thống của biến đầu ra .
 
 *Tiến hành chuẩn đoán mô hình:* Kiểm tra phần dư GLM
 
@@ -108,7 +378,8 @@ plot( resid(m.qp) ~ sqrt(fitted(m.qp)), las=1, main="Deviance residuals", ylab="
 
 Kiểm tra sự phù hợp của việc lựa chọn Poisson GLM
 
-=> Biểu đồ thể hiện một random pattern của phần dư chứng tỏ rằng mô hình là tương đối phù hợp
+=> Biểu đồ thể hiện một random pattern của phần dư chứng tỏ rằng mô hình
+là tương đối phù hợp
 
 Kiểm tra ảnh hưởng của các quan sát
 
@@ -123,7 +394,8 @@ qqnorm( resid(m.qp), las=1,main="Normal Q-Q plot\ndeviance residuals")
 qqline( resid(m.qp))
 ```
 
-=> Tu biểu đồ có thể thấy rằng các phân vị của mẫu bám sát đường phân vị lý thuyết nên mô hình Poisson là phù hợp
+=> Tu biểu đồ có thể thấy rằng các phân vị của mẫu bám sát đường phân vị
+lý thuyết nên mô hình Poisson là phù hợp
 
 *Công thức của Mô hình:*
 
@@ -133,17 +405,22 @@ $$
 
 Trong đó: $T_{1}$ là nhân tố Thời gian hoạt động ở chế độ Mode 1
 
-
 ### Problem 18
 
-A report on Canadian cancer statistics estimated the number of deaths from various types of cancer in Canada in 2000 [7]. The ﬁve leading cancer sites are studied here (Table 10.21; data set: ccancer).
+A report on Canadian cancer statistics estimated the number of deaths
+from various types of cancer in Canada in 2000 \[7\]. The ﬁve leading
+cancer sites are studied here (Table 10.21; data set: ccancer).
 
-1.  Plot the cancer rates per thousand of population against each geographical location, and then against gender. Comment on the relationships.
+1.  Plot the cancer rates per thousand of population against each
+    geographical location, and then against gender. Comment on the
+    relationships.
 2.  Identify the zeros as systematic or sampling.
-3.  Find an appropriate model for the data using an appropriate oﬀset. Do the cancer rates appear to diﬀer across the geographic regions?
+3.  Find an appropriate model for the data using an appropriate oﬀset.
+    Do the cancer rates appear to diﬀer across the geographic regions?
 4.  Interpret the ﬁtted model.
 
-Table 10.21 The estimated number of deaths for the ﬁve leading cancer sites in Canada in 2000, by geographic region and gender (Problem 10.18)
+Table 10.21 The estimated number of deaths for the ﬁve leading cancer
+sites in Canada in 2000, by geographic region and gender (Problem 10.18)
 
 ```{r}
 data("ccancer")
@@ -160,11 +437,16 @@ with(ccancer, {
 })
 ```
 
-Tỉ lệ mắc các bệnh ung thư cớ sự chênh lệch không đáng kể giữa 2 thành phố Newfoundland và Ontario nhưng nhỉnh hơn một chút ở Quebec, và mức độ phân tán ở Quebec cũng cao hơn. Xét về giới tính, sự khác biệt cũng không lớn, tỉ lệ mắc ung thư nhìn chung là co hơn ở nữ và độ phân tán cũng lớn hơn.
+Tỉ lệ mắc các bệnh ung thư cớ sự chênh lệch không đáng kể giữa 2 thành
+phố Newfoundland và Ontario nhưng nhỉnh hơn một chút ở Quebec, và mức độ
+phân tán ở Quebec cũng cao hơn. Xét về giới tính, sự khác biệt cũng
+không lớn, tỉ lệ mắc ung thư nhìn chung là co hơn ở nữ và độ phân tán
+cũng lớn hơn.
 
 **2.**
 
-Để xem xét giá trị 0 ở một số loại ung thư là mang tính chất hệ thống hay ngẫu nhiên . Ta thử xem sự phân bố của chúng theo giới tính : 
+Để xem xét giá trị 0 ở một số loại ung thư là mang tính chất hệ thống
+hay ngẫu nhiên . Ta thử xem sự phân bố của chúng theo giới tính :
 
 ```{r}
 with(ccancer,{
@@ -173,20 +455,29 @@ with(ccancer,{
 })
 
 ```
-Tu dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá trị 0 này sẽ là sampling zero.
+
+Tu dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy
+ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị
+zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể
+xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá
+trị 0 này sẽ là sampling zero.
 
 ```{r}
 plot(Count/Population*1000~Site, data=ccancer, xlab="Site", ylab="Cancer rate per thousand people", las=1, main="Cancer rate against Cancer Site")
 ```
+
 **3.**
 
-Ta xét với Biến đầu ra là số lượng ca ung thư trên 1000 người, một mô hình Poisson GLM  có thể phù hợp . Thêm giá trị offset = log(Population) để loại bỏ ảnh hưởng của quy mô dân số lên số lượng ca ung thư. 
+Ta xét với Biến đầu ra là số lượng ca ung thư trên 1000 người, một mô
+hình Poisson GLM có thể phù hợp . Thêm giá trị offset = log(Population)
+để loại bỏ ảnh hưởng của quy mô dân số lên số lượng ca ung thư.
 
 ```{r}
 m.p <- glm(Count ~ Region + Gender + Site + offset(log(Population)), data=ccancer, family=poisson(link="log"))
 printCoefmat(coef(summary(m.p)), digits=3)
 ```
-Giá trị kiểm định cho thấy rằng các hệ số của vị trí địa lý có ý nghĩa thống kê trong mô hình .
+
+Giá trị kiểm định cho thấy rằng các hệ số của vị trí địa lý có ý nghĩa
+thống kê trong mô hình .
 
 **4.**
-
