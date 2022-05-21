@@ -190,3 +190,29 @@ Giá trị kiểm định cho thấy rằng các hệ số của vị trí đị
 
 **4.**
 
+ex 10.11
+```{r}
+data("cervical"); str(cervical)
+fit.poi <- glm(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical, family = poisson())
+fit.quasi <- glm(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical, family = quasipoisson())
+summary(fit.quasi)
+
+plot(fitted(fit.quasi), resid(fit.quasi))
+
+qqnorm(qresid(fit.quasi))
+qqline(qresid(fit.quasi))
+
+fit.nev <- glm.nb(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical)
+summary(fit.nev)
+
+plot(cooks.distance(fit.poi), type="h")
+
+anova(fit.nev, test = "Chisq")
+
+p.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FALSE)
+p.poi <- pchisq(deviance(fit.poi), df.residual(fit.poi), lower.tail = FALSE)
+c(p.poi, p.nev)
+
+```
+
+
