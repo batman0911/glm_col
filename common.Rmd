@@ -2,29 +2,191 @@
 title: "common"
 author: "linhnm"
 date: '2022-05-17'
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(PASWR)
+library(memisc)
+library(GLMsData)
 ```
 
-## R Markdown
+## Chapter 10
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### Problem 17
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+An experiment [23, 36] recorded the time to failure of a piece of electronic equipment while operating in two diﬀerent modes. In any session, the machine is run in both modes for varying amounts of time (Table 10.20; dataset: failures). For each operating period, Mode 1 is the time spent operating in one mode and Mode 2 is the time spent operating in the other mode. The number of failures in each period is recorded, where each operating period is measured in weeks. The interest is in ﬁnding a model for the number of failures given the amount of time the equipment spends in the two modes.
 
-```{r cars}
-summary(cars)
+Table 10.20 Observations on electronic equipment failures. The time spent in each mode is measured in weeks (Problem 10.17)
+
+```{r echo=FALSE}
+data(failures)
+failures
 ```
 
-## Including Plots
+1.  Plot the number of failures against the time spent in Mode 1, and then against the time spent in Mode 2.
+2.  Show that an identity link function may be appropriate.
+3.  Fit the Poisson model, to model the number of failures as a function of the time spent in the two modes. Which mode appears to be the major source of failures?
+4.  Is there evidence of under- or overdispersion?
+5.  Interpret the ﬁnal model.
 
-You can also embed plots, for example:
+**Solution:**
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+**1.**
+
+```{r}
+plot(Failures ~ Time1, data=failures, xlab="Time spent in Mode 1", ylab="Number of failures")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Tu biểu đồ ta có thể thấy mối quan hệ giữa Số lần trục trặc và thời gian hoạt động ở chế độ 1 là xấp xỉ tuyến tính.
+
+```{r}
+par(mfrow=c(1,2))
+plot(Failures ~ Time2, data=failures,xlab="Time spent in Mode 2",ylab="Number of failures")
+plot(log(Failures) ~ log(Time2), data=failures,xlab="log(Time spent in Mode 2)",ylab="Number of failures")
+```
+
+Biểu đồ chỉ ra xu hướng tương đối tuyến tính giữa số lần trục trặc và log của thời gian hoạt động ở chế độ 2.
+
+**2.**
+
+Ta thử thử fit một mô hình hồi quy tuyến tính (link function là identity)
+
+```{r}
+fitted.identity <- lm(Failures ~ Time1 + log(Time2), data=failures)
+printCoefmat( coef( summary(fitted.identity)))
+```
+
+Giá trị kiểm định các hệ số cho thấy một mô hình hồi quy tuyến tính là tương đối phù hợp
+
+**3.**
+
+```{r}
+fitted.poisson <- glm(Failures ~ Time1 + log(Time2), data=failures, family=poisson(link="log"))
+printCoefmat( coef( summary(fitted.poisson)))
+```
+
+Tư bảng ANOVA, ta thấy rằng hiệu ứng của Thời gian hoạt động ở chế độ 1 là đáng kể tới tần suất hỏng của thiết bị, trong khi hiệu ứng của Thời gian hoạt động ở chế độ 2 là không đáng kể.
+
+**4.**
+
+```{r}
+deviance(fitted.poisson)
+df.residual(fitted.poisson)
+```
+
+Tu dữ liệu ta thấy độ chệch phần dự nhỏ hơn bậc tự do phần dư , nên mô hình có hiện tượng underdispersion
+
+**5.**
+
+Mô hình Poisson GLM có hiện tương underdispersion, vậy nên ta tìm kiếm một mô hình thay thế là quasi-Poisson. Vì Mode 2 không có ý nghĩa thống kê nên ta cũng loại khỏi mô hình
+
+```{r}
+m.qp <- glm(Failures ~ Time1, data=failures, family=quasipoisson)
+printCoefmat( coef( summary(m.qp)))
+```
+
+*Goodness of fit test *
+```{r}
+fit <- m.qp
+pearson.gof <- sum(fit$weights * fit$residuals^2)
+tab <- data.frame(GoF.Statistic=c(fit$deviance, pearson.gof))
+tab$DF <- rep(fit$df.residual, 2)
+tab$P.Value <- pchisq(tab$GoF, df=tab$DF, lower.tail=FALSE)
+row.names(tab) <- c("Deviance", "Pearson"); print(tab, digits=3)
+```
+=> Giá trị của kiểm định goodness of fit cho thấy mô hình chưa  có đủ các biến cần thiết để biểu diễn tính hệ thống của biến đầu ra . 
+
+
+*Tiến hành chuẩn đoán mô hình:* Kiểm tra phần dư GLM
+
+```{r}
+plot( resid(m.qp) ~ sqrt(fitted(m.qp)), las=1, main="Deviance residuals", ylab="Deviance residuals",xlab="Square root of fitted values" )
+```
+
+Kiểm tra sự phù hợp của việc lựa chọn Poisson GLM
+
+=> Biểu đồ thể hiện một random pattern của phần dư chứng tỏ rằng mô hình là tương đối phù hợp
+
+Kiểm tra ảnh hưởng của các quan sát
+
+```{r}
+plot( cooks.distance(m.qp), type="h", las=1,ylab="Cook's distance, D", main="Cook's distance")
+```
+
+Kiểm tra Possion EDM có phù hợp với biến đầu ra không
+
+```{r}
+qqnorm( resid(m.qp), las=1,main="Normal Q-Q plot\ndeviance residuals")
+qqline( resid(m.qp))
+```
+
+=> Tu biểu đồ có thể thấy rằng các phân vị của mẫu bám sát đường phân vị lý thuyết nên mô hình Poisson là phù hợp
+
+*Công thức của Mô hình:*
+
+$$
+log(\mu) = 2.237 + 0.0077T_{1}
+$$
+
+Trong đó: $T_{1}$ là nhân tố Thời gian hoạt động ở chế độ Mode 1
+
+
+### Problem 18
+
+A report on Canadian cancer statistics estimated the number of deaths from various types of cancer in Canada in 2000 [7]. The ﬁve leading cancer sites are studied here (Table 10.21; data set: ccancer).
+
+1.  Plot the cancer rates per thousand of population against each geographical location, and then against gender. Comment on the relationships.
+2.  Identify the zeros as systematic or sampling.
+3.  Find an appropriate model for the data using an appropriate oﬀset. Do the cancer rates appear to diﬀer across the geographic regions?
+4.  Interpret the ﬁtted model.
+
+Table 10.21 The estimated number of deaths for the ﬁve leading cancer sites in Canada in 2000, by geographic region and gender (Problem 10.18)
+
+```{r}
+data("ccancer")
+ccancer
+```
+
+**1.**
+
+```{r}
+with(ccancer, {
+  Cancer.Rate <- Count/Population*1000
+  plot(Cancer.Rate ~ Region, data=ccancer, xlab="Region",ylab="Cancer rate per thousand people", las=1, main="Cancer rate against Geographic location")
+  plot(Cancer.Rate ~ Gender, data=ccancer, xlab="Gender", ylab="Cancer rate per thousand people", las=1, main="Cancer rate against Gender")
+})
+```
+
+Tỉ lệ mắc các bệnh ung thư cớ sự chênh lệch không đáng kể giữa 2 thành phố Newfoundland và Ontario nhưng nhỉnh hơn một chút ở Quebec, và mức độ phân tán ở Quebec cũng cao hơn. Xét về giới tính, sự khác biệt cũng không lớn, tỉ lệ mắc ung thư nhìn chung là co hơn ở nữ và độ phân tán cũng lớn hơn.
+
+**2.**
+
+Để xem xét giá trị 0 ở một số loại ung thư là mang tính chất hệ thống hay ngẫu nhiên . Ta thử xem sự phân bố của chúng theo giới tính : 
+
+```{r}
+with(ccancer,{
+  Count.by.Site.Gender <- xtabs(Count ~ Gender + Site)
+  Count.by.Site.Gender
+})
+
+```
+Tu dữ liệu ta thấy rằng, ung thư loại Prostate là loại ung thư chỉ xảy ra ở Male nên giá trị này ở Female tất nhiên phải bằng 0 nên giá trị zero ở đây là structual zero. Còn đối với ung thư loại Breast thì có thể xảy ra cả ở Male và Female tuy nhiên sẽ ít hơn rất nhiều ở Male nên giá trị 0 này sẽ là sampling zero.
+
+```{r}
+plot(Count/Population*1000~Site, data=ccancer, xlab="Site", ylab="Cancer rate per thousand people", las=1, main="Cancer rate against Cancer Site")
+```
+**3.**
+
+Ta xét với Biến đầu ra là số lượng ca ung thư trên 1000 người, một mô hình Poisson GLM  có thể phù hợp . Thêm giá trị offset = log(Population) để loại bỏ ảnh hưởng của quy mô dân số lên số lượng ca ung thư. 
+
+```{r}
+m.p <- glm(Count ~ Region + Gender + Site + offset(log(Population)), data=ccancer, family=poisson(link="log"))
+printCoefmat(coef(summary(m.p)), digits=3)
+```
+Giá trị kiểm định cho thấy rằng các hệ số của vị trí địa lý có ý nghĩa thống kê trong mô hình .
+
+**4.**
+
