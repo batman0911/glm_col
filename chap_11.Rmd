@@ -1,0 +1,43 @@
+---
+title: "chap_11"
+output: html_document
+date: '2022-05-21'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ex 11.14
+
+```{r}
+data("nambeware"); str(nambeware)
+
+hist(nambeware$Price) # using gamma
+
+par(mfrow = c(1, 3))
+plot(Price ~ Time, data = nambeware)
+plot(Price ~ Diam, data = nambeware)
+plot(Price ~ Type, data = nambeware)
+
+fit.log <- glm(Price ~ Time + Diam + Type, data = nambeware, family = Gamma(link = "log"))
+fit.id <- update(fit.log, family = Gamma(link = "identity"))
+
+anova(fit.log, test = "F")
+anova(fit.id, test = "F")
+
+extractAIC(fit.log)
+extractAIC(fit.id)
+
+pf()
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

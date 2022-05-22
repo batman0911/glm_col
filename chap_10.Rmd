@@ -190,3 +190,79 @@ Giá trị kiểm định cho thấy rằng các hệ số của vị trí đị
 
 **4.**
 
+ex 10.11
+```{r}
+data("cervical"); str(cervical)
+length(cervical$Deaths)
+# biến response là biến đếm, nên sử dụng mô hình poisson
+# khi sử dụng link func là log thì có thêm offset
+fit.poi <- glm(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical, family = poisson())
+
+min(cervical$Deaths)
+# Deviance GOF
+p.meanDev <- pchisq(deviance(fit.poi), df.residual(fit.poi), lower.tail = FALSE)
+# Pearson GOF
+sum.pear <- sum(fit.poi$weights * fit.poi$residuals^2)
+p.pearson <- pchisq(sum.pear, fit.poi$df.residual, lower.tail = FALSE)
+# p value < 0.05 -> bác bỏ H0 (mô hình bão hòa) hay tương đương với mô hình này chưa fit
+
+summary(fit.poi)
+#anova(fit.poi, test = "Chisq")
+
+# kiểm tra outlier
+plot(cooks.distance(fit.poi), type="h")
+summary(cooks.distance(fit.poi))
+#max(abs(cooks.distance(fit.poi)))
+#mean(abs(coo))
+
+which(cooks.distance(fit.poi) > 3 * mean(cooks.distance(fit.poi)))
+
+fit.poi.out <- update(fit.poi, subset = -1)
+summary(fit.poi.out)
+# tính lại GOF -> mô hình có cải thiện hơn đáng kể nhưng vẫn chưa fit
+
+
+
+
+deviance(fit.poi) / df.residual(fit.poi) # overdispersion (lớn hơn 1.5 thì coi như bị overdispersion)
+deviance(fit.poi.out) / df.residual(fit.poi.out) # overdispersion (lớn hơn 1.5 thì coi như bị overdispersion)
+
+
+fit.quasi <- glm(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical, family = quasipoisson())
+fit.quasi <- update(fit.quasi, subset = -1)
+summary(fit.quasi)
+# tính lại GOF cho quasi
+
+anova(fit.quasi, test = "Chisq")
+# Mô hình quasi không làm ảnh hưởng đến hệ số và số lượng biến giải thích
+
+plot(fitted(fit.quasi), resid(fit.quasi))
+
+qqnorm(qresid(fit.quasi))
+qqline(qresid(fit.quasi))
+
+# tìm mô hình tốt hơn
+fit.nev <- glm.nb(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical)
+#fit.nev <- update(fit.nev, subset = -1)
+summary(fit.nev)
+
+fit.nev.out <- update(fit.nev, subset = -1)
+c(extractAIC(fit.nev), extractAIC(fit.nev.out), extractAIC(fit.poi))
+
+
+
+fit.infl <- update(fit.poi, subset = -1)
+plot(cooks.distance(fit.infl), type="h")
+
+anova(fit.nev, test = "Chisq")
+
+p.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FALSE)
+p.poi <- pchisq(deviance(fit.poi), df.residual(fit.poi), lower.tail = FALSE)
+p.infl <- pchisq(deviance(fit.infl), df.residual(fit.infl), lower.tail = FALSE)
+c(p.poi, p.nev, p.infl)
+
+extractAIC(fit.poi)
+
+```
+
+
