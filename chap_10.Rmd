@@ -222,8 +222,6 @@ summary(fit.poi.out)
 # tính lại GOF -> mô hình có cải thiện hơn đáng kể nhưng vẫn chưa fit
 
 
-
-
 deviance(fit.poi) / df.residual(fit.poi) # overdispersion (lớn hơn 1.5 thì coi như bị overdispersion)
 deviance(fit.poi.out) / df.residual(fit.poi.out) # overdispersion (lớn hơn 1.5 thì coi như bị overdispersion)
 
@@ -245,6 +243,10 @@ qqline(qresid(fit.quasi))
 fit.nev <- glm.nb(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical)
 #fit.nev <- update(fit.nev, subset = -1)
 summary(fit.nev)
+
+# GOF cho nhị thức âm
+p.meanDev.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FALSE)
+# > 0.05 -> mô hình fit
 
 fit.nev.out <- update(fit.nev, subset = -1)
 c(extractAIC(fit.nev), extractAIC(fit.nev.out), extractAIC(fit.poi))
