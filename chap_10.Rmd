@@ -236,8 +236,8 @@ anova(fit.quasi, test = "Chisq")
 
 plot(fitted(fit.quasi), resid(fit.quasi))
 
-qqnorm(qresid(fit.quasi))
-qqline(qresid(fit.quasi))
+#qqnorm(qresid(fit.quasi))
+#qqline(qresid(fit.quasi))
 
 # tìm mô hình tốt hơn
 fit.nev <- glm.nb(Deaths ~ offset(log(Wyears)) + Age + Country, data = cervical)
@@ -249,14 +249,20 @@ p.meanDev.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FA
 # > 0.05 -> mô hình fit
 
 fit.nev.out <- update(fit.nev, subset = -1)
-c(extractAIC(fit.nev), extractAIC(fit.nev.out), extractAIC(fit.poi))
+#c(extractAIC(fit.nev), extractAIC(fit.nev.out), extractAIC(fit.poi))
+
+par(mfrow = c(2, 2))
+scatter.smooth(rstandard(fit.nev.out) ~ log(fitted(fit.nev.out)))
+qqnorm(qresid(fit.nev.out))
+qqline(qresid(fit.nev.out))
+plot(cooks.distance(fit.nev.out), type="h")
 
 
 
-fit.infl <- update(fit.poi, subset = -1)
-plot(cooks.distance(fit.infl), type="h")
+#fit.infl <- update(fit.poi, subset = -1)
+#plot(cooks.distance(fit.infl), type="h")
 
-anova(fit.nev, test = "Chisq")
+#anova(fit.nev, test = "Chisq")
 
 p.nev <- pchisq(deviance(fit.nev), df.residual(fit.nev), lower.tail = FALSE)
 p.poi <- pchisq(deviance(fit.poi), df.residual(fit.poi), lower.tail = FALSE)
