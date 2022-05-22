@@ -1,0 +1,124 @@
+---
+title: "chapter11"
+output:
+  pdf_document: default
+date: '2022-05-21'
+---
+
+```{r}
+library(GLMsData)
+data("nambeware"); str(nambeware)
+```
+```{r}
+
+plot(x=nambeware$Price, y=nambeware$Type)
+plot(nambeware$Diam, nambeware$Time)
+```
+Nhận xét: Đường kính càng lớn, tgian mài và đánh bóng càng lớn => giá càng cao => mô hình liên tục dương
+=> gamma glm or inverse gaussian
+
+pearson.gof <- sum(yd.glm$weights*yd.glm$residuals^2)
+tab <-data.frame(GoF.Statistic=c(yd.glm$deviance, pearson.gof))
+tab$DF <- rep(yd.glm$df.residual,2)
+tab$P.Value <- pchisq(tab$GoF,df=tab$DF,lower.tail = FALSE)
+row.names(tab)<-c("Deviance","Pearson"); print(tab,digits=3)
+
+```{r}
+nam_gamma = glm( Price ~ (Diam+Time) * Type, family=Gamma(link=log), data=nambeware )
+```
+Tính gof cho mô hình
+pchisq(deviance(ks.noMO), df.residual(ks.noMO), lower.tail=FALSE)
+```{r}
+pearson.gof <- sum(nam_gamma$weights*nam_gamma$residuals^2)
+tab <-data.frame(GoF.Statistic=c(nam_gamma$deviance, pearson.gof))
+tab$DF <- rep(nam_gamma$df.residual,2)
+tab$P.Value <- pchisq(tab$GoF,df=tab$DF,lower.tail = FALSE)
+row.names(tab)<-c("Deviance","Pearson"); print(tab,digits=3)
+```
+pvalue = 1: mô hình chọn là chính xác
+```{r}
+summary(nam_gamma)
+```
+
+```{r}
+round(anova(nam_gamma, test="F"), 2)
+```
+Các pvalue đều < 0.05 => các biến giải thích có đóng góp vào mô hình
+
+```{r}
+library(statmod)
+```
+Kiếm tra gof
+```{r}
+scatter.smooth( rstandard(nam_gamma) ~ log(fitted(nam_gamma)), las=1,
+xlab="Log of fitted values", ylab="Standardized residuals" )
+plot( cooks.distance(nam_gamma), type="h", las=1,
+ylab="Cook's distance, D" )
+plot(hatvalues(nam_gamma), type = "h", las = 1)
+qqnorm( qr <- qresid(nam_gamma), las=1 ); qqline(qr)
+plot( rstandard(nam_gamma) ~ nambeware$Type, las=1,
+xlab="Variety", ylab="Standardized residuals" )
+
+```
+```{r}
+colSums(influence.measures(nam_gamma)$is.inf)
+```
+
+```{r}
+summary(nam_gamma)
+```
+
+tham số phân tán phi: 0.03430979 đủ nhỏ
+Các đường thống kê mô tả theo ta thấy rất tốt: mô hình được chọn là chính xác với phân phối gamma
+
+phân phối invese gausian
+```{r}
+nam_inverse = glm( Price ~ (Diam+Time) * Type, family=inverse.gaussian(link=log), data=nambeware )
+```
+
+```{r}
+pearson.gof <- sum(nam_inverse$weights*nam_inverse$residuals^2)
+tab <-data.frame(GoF.Statistic=c(nam_inverse$deviance, pearson.gof))
+tab$DF <- rep(nam_inverse$df.residual,2)
+tab$P.Value <- pchisq(tab$GoF,df=tab$DF,lower.tail = FALSE)
+row.names(tab)<-c("Deviance","Pearson"); print(tab,digits=3)
+```
+pvalue đều bằng 1: mô hình đc chọn là phù hợp
+
+```{r}
+round(anova(nam_inverse, test="F"), 2)
+```
+Ta thấy có p-value của biến time:type > 0.05 => cần update mô hình
+```{r}
+nam_inverse_up <- update(nam_inverse, .~ Diam+Time)
+summary(nam_inverse_up)$dispersion
+```
+```{r}
+round(anova(nam_inverse_up, test = "F"),2)
+```
+```{r}
+summary(nam_inverse_up)
+```
+có tham số phân tán phi = 0.0003425448 rất nhỏ: mô hình được chọn là chính xác
+```{r}
+scatter.smooth( rstandard(nam_inverse_up) ~ log(fitted(nam_inverse_up)), las=1,
+xlab="Log of fitted values", ylab="Standardized residuals" )
+plot( cooks.distance(nam_inverse_up), type="h", las=1,
+ylab="Cook's distance, D" )
+qqnorm( qr <- qresid(nam_inverse_up), las=1 ); qqline(qr)
+plot( rstandard(nam_inverse_up) ~ nambeware$Type, las=1,
+xlab="Variety", ylab="Standardized residuals" )
+```
+Đồ thị theo quan sát đã fit hơn: mô hình chính xác
+Đánh giá theo AIC:
+```{r}
+c("Gamma:"=AIC(nam_gamma),
+
+  "Inverse:"=AIC(nam_inverse_up))
+```
+AIC của Inverse Gaussian > AIC Gamma GLM => chọn Gamma
+
+
+
+
+

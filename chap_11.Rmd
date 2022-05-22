@@ -14,22 +14,32 @@ ex 11.14
 data("nambeware"); str(nambeware)
 
 hist(nambeware$Price) # using gamma
+# Dữ liệu giá là dữ liệu dương
+# Vẽ hist -> có phân phối gần giống phân bố Gamma hoặc inverse gaussian
 
-par(mfrow = c(1, 3))
+pairs(nambeware)
+
+par(mfrow = c(2, 2))
 plot(Price ~ Time, data = nambeware)
 plot(Price ~ Diam, data = nambeware)
 plot(Price ~ Type, data = nambeware)
+# Giá tăng khi đường kính tăng
+# Giá tăng khi thời gian rửa tăng
+# Không có nhiều sự khác biệt về giá giữa các loại (Type)
+
+# Nhận xét tương quan
+# Bước đầu thấy có sự tương quan giữa time và diam
 
 fit.log <- glm(Price ~ Time + Diam + Type, data = nambeware, family = Gamma(link = "log"))
 fit.id <- update(fit.log, family = Gamma(link = "identity"))
 
-anova(fit.log, test = "F")
-anova(fit.id, test = "F")
+#anova(fit.log, test = "F")
+#anova(fit.id, test = "F")
 
-extractAIC(fit.log)
-extractAIC(fit.id)
+#extractAIC(fit.log)
+#extractAIC(fit.id)
 
-pf()
+#pf()
 ```
 
 ## Including Plots
