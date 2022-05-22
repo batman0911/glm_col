@@ -21,8 +21,8 @@ An experiment [23, 36] recorded the time to failure of a piece of electronic equ
 
 Table 10.20 Observations on electronic equipment failures. The time spent in each mode is measured in weeks (Problem 10.17)
 
-```{r echo=FALSE}
-data(failures)
+```{r}
+data("failures"); str(failures)
 failures
 ```
 
